@@ -1,0 +1,609 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FOUR | AI Discussion Room</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: #0b1020;
+  color: #f4f6ff;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  max-width: 850px;
+  margin: auto;
+}
+
+header {
+  text-align: center;
+  padding: 24px 10px;
+}
+
+h1 {
+  font-size: 38px;
+  letter-spacing: 5px;
+  margin-bottom: 8px;
+}
+
+header p {
+  color: #aab4ce;
+}
+
+.characters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.character, .panel {
+  background: #151e33;
+  border: 1px solid #293754;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.character h3 {
+  margin: 0 0 7px;
+}
+
+.character p {
+  color: #aab4ce;
+  margin: 0;
+  font-size: 13px;
+}
+
+.alex { border-left: 4px solid #4ea5ff; }
+.maya { border-left: 4px solid #ed83c6; }
+.david { border-left: 4px solid #ff9c55; }
+.sophie { border-left: 4px solid #a78bfa; }
+
+.panel {
+  margin-top: 18px;
+}
+
+.mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.mode {
+  background: #25324b;
+  color: white;
+}
+
+.mode.active {
+  background: #536dfe;
+}
+
+.voice-select {
+  width: 100%;
+  padding: 12px;
+  margin: 6px 0 14px;
+  background: #0b1428;
+  color: white;
+  border: 1px solid #354566;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 110px;
+  background: #0b1428;
+  color: white;
+  border: 1px solid #354566;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 16px;
+  resize: vertical;
+}
+
+.start {
+  width: 100%;
+  margin-top: 12px;
+  background: #536dfe;
+  color: white;
+}
+
+.clear {
+  background: #293754;
+  color: white;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.voice-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.voice-controls button {
+  flex: 1;
+  background: #293754;
+  color: white;
+}
+
+#status {
+  color: #aab4ce;
+  text-align: center;
+  margin: 18px 0;
+  font-size: 13px;
+}
+
+.reply {
+  background: #151e33;
+  border: 1px solid #293754;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.reply h3 {
+  margin-top: 0;
+}
+
+.reply p {
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.reply small {
+  color: #8fa0c0;
+}
+
+.round-title {
+  color: #9eb0ff;
+  margin-top: 25px;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <h1>THE FOUR</h1>
+  <p>Four minds. Four personalities. One conversation.</p>
+</header>
+
+<div class="characters">
+  <div class="character alex">
+    <h3>🧠 Alex</h3>
+    <p>The logical thinker</p>
+  </div>
+
+  <div class="character maya">
+    <h3>💗 Maya</h3>
+    <p>The empathetic voice</p>
+  </div>
+
+  <div class="character david">
+    <h3>⚡ David</h3>
+    <p>The challenger</p>
+  </div>
+
+  <div class="character sophie">
+    <h3>💡 Sophie</h3>
+    <p>The creative thinker</p>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>🎙️ Character Voice Settings</h3>
+
+  <label for="voice-Alex">🧠 Alex's voice</label>
+  <select id="voice-Alex" class="voice-select"></select>
+
+  <label for="voice-Maya">💗 Maya's voice</label>
+  <select id="voice-Maya" class="voice-select"></select>
+
+  <label for="voice-David">⚡ David's voice</label>
+  <select id="voice-David" class="voice-select"></select>
+
+  <label for="voice-Sophie">💡 Sophie's voice</label>
+  <select id="voice-Sophie" class="voice-select"></select>
+
+  <p id="voiceStatus">Loading available phone voices...</p>
+
+  <label>
+    <input type="checkbox" id="speakReplies" checked>
+    🔊 Speak replies aloud
+  </label>
+
+  <div class="voice-controls">
+    <button onclick="pauseSpeaking()">Pause</button>
+    <button onclick="resumeSpeaking()">Resume</button>
+    <button onclick="stopSpeaking()">Stop</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>Choose conversation mode</h3>
+
+  <div class="mode-buttons">
+    <button class="mode active" id="discussionMode"
+      onclick="setMode('discussion')">
+      Group Discussion
+    </button>
+
+    <button class="mode" id="debateMode"
+      onclick="setMode('debate')">
+      Debate Mode
+    </button>
+  </div>
+
+  <p id="modeDescription">
+    Everyone shares their perspective and builds on the conversation.
+  </p>
+
+  <textarea id="prompt"
+    placeholder="Ask THE FOUR anything..."></textarea>
+
+  <button id="micButton" onclick="startListening()"
+    style="padding:12px;margin:10px 0;border-radius:10px;cursor:pointer;">
+    🎤 Speak to THE FOUR
+  </button>
+  <p id="micStatus">Tap the microphone to speak.</p>
+
+  <button class="start" id="startButton"
+    onclick="startDiscussion()">
+    Start Discussion
+  </button>
+
+  <button class="clear" onclick="clearConversation()">
+    Clear Conversation
+  </button>
+</div>
+
+<p id="status">Connecting to THE FOUR...</p>
+
+<div id="results"></div>
+
+</div>
+
+<script>
+let currentMode = "discussion";
+let history = [];
+let availableVoices = [];
+
+const names = ["Alex", "Maya", "David", "Sophie"];
+
+const descriptions = {
+  discussion:
+    "Everyone shares their perspective and builds on the conversation.",
+  debate:
+    "Everyone presents opening arguments, then challenges and responds."
+};
+
+// LOAD PHONE VOICES
+
+function loadVoices() {
+  if (!("speechSynthesis" in window)) {
+    document.getElementById("voiceStatus").textContent =
+      "Voice output is not supported by this browser.";
+    return;
+  }
+
+  availableVoices = speechSynthesis.getVoices();
+
+  if (availableVoices.length === 0) return;
+
+  const englishVoices = availableVoices.filter(voice =>
+    voice.lang.toLowerCase().startsWith("en")
+  );
+
+  const choices = englishVoices.length
+    ? englishVoices
+    : availableVoices;
+
+  names.forEach((name, index) => {
+    const select = document.getElementById("voice-" + name);
+
+    const previousChoice = select.value;
+
+    select.innerHTML = "";
+
+    choices.forEach(voice => {
+      const option = document.createElement("option");
+      option.value = voice.name;
+      option.textContent = voice.name + " (" + voice.lang + ")";
+      select.appendChild(option);
+    });
+
+    if (previousChoice &&
+        choices.some(v => v.name === previousChoice)) {
+      select.value = previousChoice;
+    } else if (choices.length > 0) {
+      select.selectedIndex = index % choices.length;
+    }
+  });
+
+  document.getElementById("voiceStatus").textContent =
+    choices.length + " available voices loaded.";
+}
+
+if ("speechSynthesis" in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+// SPEAK CHARACTER REPLIES
+
+function speakReply(reply) {
+  if (!document.getElementById("speakReplies").checked) return;
+
+  if (!("speechSynthesis" in window)) return;
+
+  const select = document.getElementById(
+    "voice-" + reply.name
+  );
+
+  const speech = new SpeechSynthesisUtterance(
+    reply.name + ". " + reply.text
+  );
+
+  const chosenVoice = availableVoices.find(
+    voice => select && voice.name === select.value
+  );
+
+  if (chosenVoice) {
+    speech.voice = chosenVoice;
+  }
+
+  const styles = {
+    Alex: { pitch: 0.9, rate: 0.95 },
+    Maya: { pitch: 1.15, rate: 0.90 },
+    David: { pitch: 0.95, rate: 1.05 },
+    Sophie: { pitch: 1.1, rate: 1.0 }
+  };
+
+  const style = styles[reply.name] || styles.Alex;
+
+  speech.pitch = style.pitch;
+  speech.rate = style.rate;
+
+  speechSynthesis.speak(speech);
+}
+
+function pauseSpeaking() {
+  if ("speechSynthesis" in window) {
+    speechSynthesis.pause();
+  }
+}
+
+function resumeSpeaking() {
+  if ("speechSynthesis" in window) {
+    speechSynthesis.resume();
+  }
+}
+
+function stopSpeaking() {
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
+  }
+}
+
+// CONVERSATION MODE
+
+function setMode(mode) {
+  currentMode = mode;
+
+  document.getElementById("discussionMode")
+    .classList.toggle("active", mode === "discussion");
+
+  document.getElementById("debateMode")
+    .classList.toggle("active", mode === "debate");
+
+  document.getElementById("modeDescription").textContent =
+    descriptions[mode];
+
+  document.getElementById("startButton").textContent =
+    mode === "debate" ? "Start Debate" : "Start Discussion";
+}
+
+// SERVER CONNECTION
+
+async function checkServer() {
+  const status = document.getElementById("status");
+
+  try {
+    const response = await fetch("/api/health");
+
+    if (!response.ok) {
+      throw new Error("Server unavailable");
+    }
+
+    const data = await response.json();
+
+    status.textContent =
+      "● Connected | " + data.characters.join(", ") + " are ready";
+
+  } catch (error) {
+    status.textContent = "● Server connection failed";
+  }
+}
+
+// START DISCUSSION
+
+async function startDiscussion() {
+  const promptInput = document.getElementById("prompt");
+  const button = document.getElementById("startButton");
+  const results = document.getElementById("results");
+  const status = document.getElementById("status");
+
+  const prompt = promptInput.value.trim();
+
+  if (!prompt) {
+    alert("Please enter a question first.");
+    return;
+  }
+
+  button.disabled = true;
+  status.textContent = "The four minds are thinking...";
+  results.innerHTML = "";
+
+  // Avoid mixing new speech with an old conversation.
+  stopSpeaking();
+
+  try {
+    const response = await fetch("/api/discuss", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        prompt,
+        mode: currentMode,
+        history
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Something went wrong.");
+    }
+
+    for (const round of data.rounds) {
+      const heading = document.createElement("h3");
+      heading.className = "round-title";
+      heading.textContent = round.title;
+      results.appendChild(heading);
+
+      for (const reply of round.replies) {
+        const card = document.createElement("div");
+        card.className = "reply";
+
+        const name = document.createElement("h3");
+        name.textContent = reply.name + " — " + reply.role;
+
+        const text = document.createElement("p");
+        text.textContent = reply.text;
+
+        const provider = document.createElement("small");
+        provider.textContent = "AI provider: " + reply.provider;
+
+        card.append(name, text, provider);
+        results.appendChild(card);
+
+        speakReply(reply);
+
+        history.push({
+          name: reply.name,
+          text: reply.text
+        });
+      }
+    }
+
+    history = history.slice(-8);
+    promptInput.value = "";
+
+    status.textContent = "● Conversation completed";
+
+  } catch (error) {
+    status.textContent = "● " + error.message;
+
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// CLEAR CONVERSATION
+
+function clearConversation() {
+  stopSpeaking();
+  history = [];
+
+  document.getElementById("results").innerHTML = "";
+
+  document.getElementById("status").textContent =
+    "Conversation cleared. Ready for a new topic.";
+}
+
+// INITIALIZE
+
+checkServer();
+loadVoices();
+
+function startListening() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    document.getElementById("micStatus").textContent =
+      "Speech recognition is not supported. Please use Chrome.";
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-KE";
+  recognition.interimResults = false;
+  recognition.continuous = false;
+
+  const button = document.getElementById("micButton");
+  const status = document.getElementById("micStatus");
+
+  recognition.onstart = () => {
+    button.textContent = "🔴 Listening...";
+    status.textContent = "Speak now. THE FOUR is listening.";
+  };
+
+  recognition.onresult = (event) => {
+    document.getElementById("prompt").value =
+      event.results[0][0].transcript;
+    status.textContent = "Speech captured! Tap Start Discussion.";
+  };
+
+  recognition.onerror = (event) => {
+    status.textContent = "Microphone error: " + event.error;
+  };
+
+  recognition.onend = () => {
+    button.textContent = "🎤 Speak to THE FOUR";
+  };
+
+  recognition.start();
+}
+
+</script>
+
+</body>
+</html>
