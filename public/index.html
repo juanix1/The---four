@@ -252,6 +252,7 @@ button:disabled {
     <button onclick="pauseSpeaking()">Pause</button>
     <button onclick="resumeSpeaking()">Resume</button>
     <button onclick="stopSpeaking()">Stop</button>
+    <button onclick="interruptAndListen()">Interrupt & Speak</button>
   </div>
 </div>
 
@@ -308,6 +309,7 @@ button:disabled {
 let currentMode = "discussion";
 let history = [];
 let availableVoices = [];
+let submitAfterListening = false;
 
 const names = ["Alex", "Maya", "David", "Sophie"];
 
@@ -420,6 +422,16 @@ function speakReply(reply, isLast = false) {
   }
 
   speechSynthesis.speak(speech);
+}
+
+function interruptAndListen() {
+  stopSpeaking();
+  submitAfterListening = true;
+
+  document.getElementById("micStatus").textContent =
+    "Conversation interrupted. Listening for your question...";
+
+  startListening();
 }
 
 function pauseSpeaking() {
@@ -593,6 +605,7 @@ function startListening() {
     window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
+    submitAfterListening = false;
     document.getElementById("micStatus").textContent =
       "Speech recognition is not supported. Please use Chrome.";
     return;
@@ -620,6 +633,7 @@ function startListening() {
   };
 
   recognition.onerror = (event) => {
+    submitAfterListening = false;
     status.textContent = "Microphone error: " + event.error;
   };
 
@@ -628,11 +642,15 @@ function startListening() {
 
     const handsFree = document.getElementById("handsFreeMode");
 
-    if (capturedSpeech && handsFree && handsFree.checked) {
+    const shouldSubmit =
+      capturedSpeech &&
+      ((handsFree && handsFree.checked) || submitAfterListening);
+
+    submitAfterListening = false;
+
+    if (shouldSubmit) {
       status.textContent = "Sending your question to THE FOUR...";
-      setTimeout(() => {
-        if (handsFree.checked) startDiscussion();
-      }, 500);
+      setTimeout(startDiscussion, 500);
     } else if (capturedSpeech) {
       status.textContent = "Speech captured! Tap Start Discussion.";
     }
