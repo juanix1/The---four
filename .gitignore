@@ -3,3 +3,7 @@ node_modules/
 .env
 node_modules/
 public/index-backup.html
+
+# Local backups and temporary tests
+public/index-backup*.html
+check-temp.js

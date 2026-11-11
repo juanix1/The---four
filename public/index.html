@@ -277,6 +277,11 @@ button:disabled {
   <textarea id="prompt"
     placeholder="Ask THE FOUR anything..."></textarea>
 
+  <label style="display:block;margin:12px 0;">
+    <input type="checkbox" id="handsFreeMode">
+    Hands-free conversation (automatically listen and reply)
+  </label>
+
   <button id="micButton" onclick="startListening()"
     style="padding:12px;margin:10px 0;border-radius:10px;cursor:pointer;">
     🎤 Speak to THE FOUR
@@ -367,10 +372,16 @@ if ("speechSynthesis" in window) {
 
 // SPEAK CHARACTER REPLIES
 
-function speakReply(reply) {
-  if (!document.getElementById("speakReplies").checked) return;
+function speakReply(reply, isLast = false) {
+  const handsFree = document.getElementById("handsFreeMode");
 
-  if (!("speechSynthesis" in window)) return;
+  if (!document.getElementById("speakReplies").checked ||
+      !("speechSynthesis" in window)) {
+    if (isLast && handsFree && handsFree.checked) {
+      setTimeout(startListening, 700);
+    }
+    return;
+  }
 
   const select = document.getElementById(
     "voice-" + reply.name
@@ -399,6 +410,14 @@ function speakReply(reply) {
 
   speech.pitch = style.pitch;
   speech.rate = style.rate;
+
+  if (isLast) {
+    speech.onend = () => {
+      if (handsFree && handsFree.checked) {
+        setTimeout(startListening, 700);
+      }
+    };
+  }
 
   speechSynthesis.speak(speech);
 }
@@ -502,6 +521,11 @@ async function startDiscussion() {
       throw new Error(data.error || "Something went wrong.");
     }
 
+    const totalReplies = data.rounds.reduce(
+      (total, round) => total + round.replies.length, 0
+    );
+    let replyNumber = 0;
+
     for (const round of data.rounds) {
       const heading = document.createElement("h3");
       heading.className = "round-title";
@@ -524,7 +548,8 @@ async function startDiscussion() {
         card.append(name, text, provider);
         results.appendChild(card);
 
-        speakReply(reply);
+        replyNumber++;
+        speakReply(reply, replyNumber === totalReplies);
 
         history.push({
           name: reply.name,
@@ -580,6 +605,7 @@ function startListening() {
 
   const button = document.getElementById("micButton");
   const status = document.getElementById("micStatus");
+  let capturedSpeech = false;
 
   recognition.onstart = () => {
     button.textContent = "🔴 Listening...";
@@ -589,7 +615,8 @@ function startListening() {
   recognition.onresult = (event) => {
     document.getElementById("prompt").value =
       event.results[0][0].transcript;
-    status.textContent = "Speech captured! Tap Start Discussion.";
+    capturedSpeech = true;
+    status.textContent = "Speech captured!";
   };
 
   recognition.onerror = (event) => {
@@ -598,9 +625,24 @@ function startListening() {
 
   recognition.onend = () => {
     button.textContent = "🎤 Speak to THE FOUR";
+
+    const handsFree = document.getElementById("handsFreeMode");
+
+    if (capturedSpeech && handsFree && handsFree.checked) {
+      status.textContent = "Sending your question to THE FOUR...";
+      setTimeout(() => {
+        if (handsFree.checked) startDiscussion();
+      }, 500);
+    } else if (capturedSpeech) {
+      status.textContent = "Speech captured! Tap Start Discussion.";
+    }
   };
 
-  recognition.start();
+  try {
+    recognition.start();
+  } catch (error) {
+    status.textContent = "Could not start microphone: " + error.message;
+  }
 }
 
 </script>
